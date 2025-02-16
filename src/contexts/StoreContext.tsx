@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createContext, ReactNode } from "react";
 import useStore from "../hooks/useStore";
-import TestStore from "../store/TestStore";
+import Store from "../store/Store";
 
 interface StoreContextValue {
-  storeValues: Record<string, any>
-  store: TestStore
+  state: Record<string, unknown>
+  store: Store
 }
 
 export const StoreContext = createContext<StoreContextValue | undefined>(undefined)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const storeData = useStore()
+  const storeContextValue = useStore()
   console.log("storeRefresh")
 
   return (
-    <StoreContext.Provider value={storeData}>
+    <StoreContext.Provider value={storeContextValue}>
       {children}
     </StoreContext.Provider>
   )

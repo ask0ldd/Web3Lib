@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useRef, useSyncExternalStore } from "react";
-import TestStore from "../store/TestStore";
+import Store from "../store/Store";
 import ObjectUtils from "../utils/ObjectUtils";
 
 export default function useStore(){
 
-    const storeRef = useRef<TestStore>(new TestStore())
+    const storeRef = useRef<Store>(new Store())
 
     function subscribe(callback : () => void){
         if (!window) return () => {}
@@ -16,7 +16,7 @@ export default function useStore(){
     }
 
     const cachedStoreValuesRef = useRef({})
-    function getSnapshot() {
+    function getStoreSnapshot() {
         const newStoreValues = storeRef.current.getStoreValues()
         if (ObjectUtils.shallowEqual(cachedStoreValuesRef.current, newStoreValues)) {
             return cachedStoreValuesRef.current
@@ -27,20 +27,24 @@ export default function useStore(){
         return cachedStoreValuesRef.current
     }
 
-    const storeValues = useSyncExternalStore(
+    // a callback is linked to an event through the subscribe method
+    // when the event is triggered, the callback is executed
+    // the execution of this callback leads to a snapshot being taken
+    const state = useSyncExternalStore(
         subscribe, 
-        getSnapshot
+        getStoreSnapshot
     )
 
-    // Return updated storeData to the provider only when the cachedStoreValuesRef has changed
-    // meaning : the snapshot contained new values
-    const storeData = useMemo(
+    // When the storeContextValue is updated, the context is refreshed
+    // & as a consequence, the hook is reexecuted
+    // Memoizing the context value reduces the subsequent refreshes
+    const storeContextValue = useMemo(
         () => ({
-          storeValues,
-          store: storeRef.current,
+            state,
+            store: storeRef.current,
         }),
         [cachedStoreValuesRef.current]
     )
 
-    return storeData
+    return storeContextValue
 }

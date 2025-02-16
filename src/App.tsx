@@ -25,7 +25,7 @@ function App() {
 
   const {walletClient, walletAddresses, requestPermission} = useWalletClient()
 
-  const {storeValues, store} = useStoreContext()
+  const {state : storeState, store} = useStoreContext()
 
   async function connectWallet() {
     if (typeof window.ethereum !== 'undefined') {
@@ -61,11 +61,11 @@ function App() {
   }
 
   function addValue(){
-    store.setValue({test : "supertest" + Math.random()})
+    store.setSlice({test : "supertest" + Math.random()})
   }
 
   function logValue(){
-    console.log(JSON.stringify(storeValues))
+    console.log(JSON.stringify(storeState))
   }
 
   return (
@@ -76,7 +76,7 @@ function App() {
       <button onClick={disconnectWallet}>Disconnect Wallet</button>
       <button onClick={addValue}>Add Value</button>
       <button onClick={logValue}>Log Value</button>
-      {JSON.stringify(storeValues)}
+      {JSON.stringify(storeState.test)}
     </div>
   )
 }

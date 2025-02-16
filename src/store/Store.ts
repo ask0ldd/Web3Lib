@@ -1,19 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export default class TestStore{
+export default class Store{
     store: Record<string, any>
 
     constructor(){
         this.store = {}
     }
     
-    setValue(obj : object){
+    setSlice(obj: { [key: string]: unknown }) {
         this.store = {...this.store, ...obj}
         window.dispatchEvent(new CustomEvent("storeSetEvent"))
     }
 
-    getValue(propertyName : string){
-        if(!this.store[propertyName]) return null
-        return this.store[propertyName]
+    set(key : string, value : unknown){
+        this.store.set(key, value)
+    }
+
+    getValue(key : string){
+        if(!this.store[key]) return null
+        return this.store[key]
     }
 
     getStoreValues(){
