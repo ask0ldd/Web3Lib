@@ -11,8 +11,8 @@ export default function useStore(){
     function subscribe(callback : () => void){
         if (!window) return () => {}
         const eventListener = () => callback()
-        window.addEventListener("storeSetEvent", eventListener)
-        return () => window.removeEventListener("storeSetEvent", eventListener)
+        storeRef.current.addEventListener("storeSetEvent", eventListener)
+        return () => storeRef.current.removeEventListener("storeSetEvent", eventListener)
     }
 
     const cachedStoreValuesRef = useRef({})

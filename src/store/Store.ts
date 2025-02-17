@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export default class Store{
+export default class Store extends EventTarget{
     store: Record<string, any>
 
     constructor(){
+        super()
         this.store = {}
     }
     
     setSlice(obj: { [key: string]: unknown }) {
         this.store = {...this.store, ...obj}
-        window.dispatchEvent(new CustomEvent("storeSetEvent"))
+        this.dispatchEvent(new CustomEvent("storeSetEvent"))
     }
 
     set(key : string, value : unknown){
