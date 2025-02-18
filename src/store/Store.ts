@@ -12,16 +12,21 @@ export default class Store extends EventTarget{
         this.dispatchEvent(new CustomEvent("storeSetEvent"))
     }
 
-    set(key : string, value : unknown){
+    /*set(key : string, value : unknown){
         this.store.set(key, value)
+    }*/
+
+    setState(state : Record<string, any>){
+        this.store = {...state}
+        this.dispatchEvent(new CustomEvent("storeSetEvent"))
     }
 
-    getValue(key : string){
+    getSlice(key : string){
         if(!this.store[key]) return null
         return this.store[key]
     }
 
-    getStoreValues(){
-        return {...this.store}
+    getState(){
+        return this.store
     }
 }

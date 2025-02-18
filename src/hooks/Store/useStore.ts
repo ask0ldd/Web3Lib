@@ -1,14 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useRef, useSyncExternalStore } from "react";
-import Store from "../store/Store";
-import ObjectUtils from "../utils/ObjectUtils";
+import Store from "../../store/Store";
+import ObjectUtils from "../../utils/ObjectUtils";
 
 export default function useStore(){
 
     const storeRef = useRef<Store>(new Store())
 
     function subscribe(callback : () => void){
+        if (!window) return () => {}
         const eventListener = () => callback()
         storeRef.current.addEventListener("storeSetEvent", eventListener)
         return () => storeRef.current.removeEventListener("storeSetEvent", eventListener)
@@ -16,12 +17,13 @@ export default function useStore(){
 
     const cachedStoreValuesRef = useRef({})
     function getStoreSnapshot() {
-        const newStoreValues = storeRef.current.getStoreValues()
+        const newStoreValues = storeRef.current.getState()
         if (ObjectUtils.shallowEqual(cachedStoreValuesRef.current, newStoreValues)) {
             return cachedStoreValuesRef.current
         }
         // Create a new reference to ensure React detects changes
         cachedStoreValuesRef.current = { ...newStoreValues }
+        console.log(JSON.stringify(newStoreValues))
         return cachedStoreValuesRef.current
     }
 
@@ -35,11 +37,11 @@ export default function useStore(){
 
     // When the storeContextValue is updated, the context is refreshed
     // & as a consequence, the hook is reexecuted
-    // Memoizing the context value reduces the number of refreshes
+    // Memoizing the context value reduces the subsequent refreshes
     const storeContextValue = useMemo(
         () => ({
             state,
-            setState : storeRef.current.set,
+            store: storeRef.current,
         }),
         [cachedStoreValuesRef.current]
     )
