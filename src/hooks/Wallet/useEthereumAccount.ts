@@ -8,19 +8,21 @@ export default function useEthereumAccount(){
             window.ethereum.on('connect', callback)
             window.ethereum.on('disconnect', callback)
             window.ethereum.on('terminate', callback)
-            // window.ethereum.on('chainChanged', callback)
+            window.ethereum.on('chainChanged', callback)
             return () => {
                 window.ethereum?.removeListener('accountsChanged', callback)
                 window.ethereum?.removeListener('_initialized', callback)
                 window.ethereum?.removeListener('connect', callback)
                 window.ethereum?.removeListener('disconnect', callback)
                 window.ethereum?.removeListener('terminate', callback)
+                window.ethereum?.removeListener('chainChanged', callback)
             }
         }
-        return () => {};
+        return () => {}
     }
 
     let cachedAddress: string | null = null
+    // let cachedChain : string | null = null
     function getSnapshot() {
         if (!window.ethereum) return null
         const newAddress = window.ethereum.selectedAddress
