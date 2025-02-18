@@ -7,7 +7,7 @@ export default class LocalStorageService {
    * @param address The wallet address to store
    * @throws Error if the address is invalid or if storage fails
    */
-    storeWalletAddress(address : string) : void {
+    static storeWalletAddress(address : string) : void {
         try{
             if(!AddressUtils.isValidAddress(address)) throw new Error("Invalid address format.")
             localStorage.setItem("walletAddress", address)
@@ -21,7 +21,7 @@ export default class LocalStorageService {
    * @returns The stored wallet address or undefined if not found or invalid
    * @throws Error if retrieval from local storage fails
    */
-    retrieveWalletAddress() : THexAddress | undefined {
+    static retrieveWalletAddress() : THexAddress | undefined {
         try{
             const address = localStorage.getItem("walletAddress")
             if(!address) return undefined
@@ -36,7 +36,7 @@ export default class LocalStorageService {
      * Removes the wallet address from local storage.
      * @returns {void}
      */
-    deleteWalletAddress(): void {
+    static deleteWalletAddress(): void {
         localStorage.removeItem("walletAddress")
     }
 
@@ -44,7 +44,7 @@ export default class LocalStorageService {
      * Clears all data from local storage.
      * @returns {void}
      */
-    fullFlush(): void {
+    static fullFlush(): void {
         localStorage.clear()
     }
 }
