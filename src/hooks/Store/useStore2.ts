@@ -9,7 +9,7 @@ export default function useStore2(){
     const storeRef = useRef<Store>(new Store())
 
     function subscribe(callback : () => void){
-        const eventListener = () => callback()
+        const eventListener = callback
         storeRef.current.addEventListener("storeSetEvent", eventListener)
         return () => storeRef.current.removeEventListener("storeSetEvent", eventListener)
     }

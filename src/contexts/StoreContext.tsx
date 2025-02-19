@@ -17,8 +17,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     console.log("storeRefresh")
 
     return (
-        <StoreContext.Provider value={storeContextValue}>
+        <StoreContext value={storeContextValue}>
             {children}
-        </StoreContext.Provider>
+        </StoreContext>
     )
 }
