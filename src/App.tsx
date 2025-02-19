@@ -11,6 +11,7 @@ import { useStoreContext } from './hooks/Store/useStoreContext';
 import { Suspense } from 'react';
 import DelayedComponent from './components/DelayedComponent';
 import { ErrorBoundary } from 'react-error-boundary';
+import ComponentWithEasedTransition from './components/ComponentWithEasedTransition';
 
 declare global {
     interface Window {
@@ -88,6 +89,12 @@ function App() {
             <ErrorBoundary fallback={<div>Error!</div>}>
                 <Suspense fallback={<div>Loading...</div>}>
                     <DelayedComponent/>
+                    
+                </Suspense>
+            </ErrorBoundary>
+            <ErrorBoundary fallback={<div>Error!</div>}>
+                <Suspense fallback={<div>Loading...</div>}>
+                    <ComponentWithEasedTransition/>
                 </Suspense>
             </ErrorBoundary>
         </div>
