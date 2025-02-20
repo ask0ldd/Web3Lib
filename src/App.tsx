@@ -12,7 +12,7 @@ import { Suspense } from 'react';
 import DelayedComponent from './components/DelayedComponent';
 import { ErrorBoundary } from 'react-error-boundary';
 import ComponentWithEasedTransition from './components/ComponentWithEasedTransition';
-import TestLink from './components/TestLink';
+import Link from './components/Link';
 
 declare global {
     interface Window {
@@ -98,7 +98,9 @@ function App() {
                     <ComponentWithEasedTransition/>
                 </Suspense>
             </ErrorBoundary>
-            <TestLink href={"/test/"}/>
+            <Link href={"/test1/"}>Page 1</Link>
+            <Link href={"/test2/"}>Page 2</Link>
+            <Link href={"/item/2"}>Item 2</Link>
         </div>
     )
 }
