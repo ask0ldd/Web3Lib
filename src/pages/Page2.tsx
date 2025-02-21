@@ -1,4 +1,4 @@
-import Link from "../components/Link";
+import Link from "../router/Link";
 import { useRouter } from "../router/useRouter";
 
 export default function Page2(){

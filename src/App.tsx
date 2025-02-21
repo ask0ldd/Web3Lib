@@ -12,7 +12,7 @@ import { Suspense } from 'react';
 import DelayedComponent from './components/DelayedComponent';
 import { ErrorBoundary } from 'react-error-boundary';
 import ComponentWithEasedTransition from './components/ComponentWithEasedTransition';
-import Link from './components/Link';
+import Link from './router/Link';
 
 declare global {
     interface Window {

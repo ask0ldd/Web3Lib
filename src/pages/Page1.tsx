@@ -1,4 +1,4 @@
-import Link from "../components/Link";
+import Link from "../router/Link";
 
 export default function Page1(){
     return(
