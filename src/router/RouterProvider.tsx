@@ -1,29 +1,41 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import App from "../App";
 import React from "react";
-import Route from '../components/Route';
+import Route from './Route';
 import { RouterContext } from "./RouterContext";
 
 export function RouterProvider({ children, base = '' }: { children: ReactNode, base? : string }){
 
+    console.log("router refresh")
+
     // the element that needs to be displayed according to the active path
-    const [activeChild, setActiveChild] = useState<ReactNode>(<App/>)
-    const [params, setParams] = useState<string[]>([])
+    const [activeChild, setActiveChild] = useState<ReactNode>(<></>)
+    const params = useRef<Record<string, string>>({})
 
     // convert all the Route child components into a {path, element} object
+    // !!! add try catch
     const routing = useMemo(() => {
         return React.Children.map(children, (child) => {
             if (React.isValidElement<React.ComponentProps<typeof Route>>(child) && child.type === Route) {
-                const path = base + child.props.path.replace(/\/$/, "")
-                const params = extractParams(path)
+
+                // fallback
+                if(child.props.path == "*") return ({
+                    path : '*',
+                    pathMatchingRegex : new RegExp('(?s:.*)'),
+                    paramsKeys : [],
+                    element: child.props.element 
+                })
+
+                const path = base + child.props.path.replace(/\/$/, "") // getting rid of trailing "/""
+                const paramsKeys = extractParams(path)
+                const pathMatchingRegex = paramsKeys.length == 0 ? 
+                    new RegExp(`^${path}$`) : 
+                        // replace /: with the same number of /[^/]+ so it can be compared to the active url
+                        new RegExp(`^${path}`.replace(/\/:[^/]+(?=\/|$)/g, (match) => match.endsWith('/') ? `(/[^/]+)` + '/' : `(/[^/]+)`) + '$')
                 return ({ 
                     path,
-                    regex: params.length == 0 ? 
-                        new RegExp(`^${path}$`) : 
-                            // !!! should deal with url accepting one param still responding positively to url with 2 params
-                            new RegExp(`^${path}$`.replace(/\/:[^/]+(?=\/|$)/g, (match) => match.endsWith('/') ? '(/[^/]+)*' + '/' : '(/[^/]+)*')),
-                    params,
+                    pathMatchingRegex,
+                    paramsKeys,
                     element: child.props.element 
                 })
             }
@@ -47,45 +59,55 @@ export function RouterProvider({ children, base = '' }: { children: ReactNode, b
         return window.location.href.replace(/\/$/, "")
     }, [])
 
-    const historyState = useSyncExternalStore(
-        subscribe, 
-        getHistorySnapshot
-    )
-
-    function subscribe(callback : () => void){
+    const subscribe = useCallback((callback : () => void) => {
         window.addEventListener('popstate', callback)
         window.addEventListener('pushstate', callback)
         return () => {
           window.removeEventListener('popstate', callback)
           window.removeEventListener('pushstate', callback)
-        };
-    }
+        }
+    }, [])
+
+    const historyState = useSyncExternalStore(
+        subscribe, 
+        getHistorySnapshot
+    )
 
     useEffect(() => {
+        console.log('historyState effect')
+
         function handleMatchingRoute(route : IRoute, historyState : string){
-            if(route.params.length > 0) {
-                setParams(historyState.split('/').slice(-route.params.length))
+            const nExpectedParams = route.paramsKeys.length
+            if(nExpectedParams > 0) {
+                const extractedParams = historyState.split('/').slice(-nExpectedParams)
+                if(extractedParams.length != nExpectedParams) throw new Error(`Expected ${nExpectedParams} params, but got ${extractedParams.length}`)
+                params.current = Object.fromEntries(route.paramsKeys.map((key, index) => [key, extractedParams[index]]))
             }
-            return setActiveChild(route.element)
+            if(!Object.is(activeChild, route.element)) setActiveChild(route.element)
         }
 
-        const activeRoute = routing?.find(route => historyState.match(route.regex))
-        if(activeRoute) handleMatchingRoute(activeRoute, historyState)
-        const defaultRoute = routing?.find(route => route.path == '*')
-        if(defaultRoute) handleMatchingRoute(defaultRoute, historyState)
+        try{
+            // const historyPathname = new URL(historyState).pathname
+            const activeRoute = routing?.find(route => historyState.match(route.pathMatchingRegex))
+            if(activeRoute) return handleMatchingRoute(activeRoute, historyState)
+
+            const defaultRoute = routing?.find(route => route.path == '*')
+            if(defaultRoute) handleMatchingRoute(defaultRoute, historyState)
+        } catch(error){
+            console.error(error)
+        }
         // !!! throw if no matching route or default 404?
     }, [historyState])
 
     // programmatical navigation
     const navigate = useCallback((path : string) =>{
-        // !!! check if path is valid
         history.pushState(null, '', path)
     }, [])
 
     // retrieve params
-    const getParams = useCallback(() =>{
-        return params
-    }, [params])
+    const getParams = useCallback(() => {
+        return params.current
+    }, [params.current])
 
     return (
         <RouterContext value={{navigate, getParams}}>
@@ -105,11 +127,19 @@ function extractParams(url : string) {
     return matches.map(match => match.slice(2));
 }
 
-// <Route path="/:param([0-9a-zA-Z-_~!$&'()*+,;=:@%]+)" component={YourComponent} />
-
 interface IRoute{
-    path: string;
-    regex: RegExp;
-    params: string[];
-    element: ReactNode;
+    path: string
+    pathMatchingRegex: RegExp
+    paramsKeys: string[]
+    element: ReactNode
 }
+
+/*
+const url = new URL('https://example.com/path/to/page?param1=value1&param2=value2');
+
+console.log(url.protocol); // "https:"
+console.log(url.hostname); // "example.com"
+console.log(url.pathname); // "/path/to/page"
+console.log(url.search);   // "?param1=value1&param2=value2"
+// 
+// */
