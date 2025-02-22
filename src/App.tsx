@@ -101,6 +101,7 @@ function App() {
             <Link href={"/test1/"}>Page 1</Link>
             <Link href={"/test2/"}>Page 2</Link>
             <Link href={"/item/2"}>Item 2</Link>
+            <Link href={"/item/22"}>Item 22</Link>
         </div>
     )
 }
