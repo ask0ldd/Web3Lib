@@ -12,9 +12,9 @@ import Item from './pages/Item.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <StoreProvider>
-      <RouterProvider base={'http://localhost:5173'}>
+      <RouterProvider base={'http://localhost:5173'} checkAuthCallback={() => false}>
         <Route path={'/'} element={<App/>}/>
-        <Route path={'/test1'} element={<Page1/>}/>
+        <Route path={'/test1'} element={<Page1/>} protect fallbackElement={<App/>}/>
         <Route path={'/test2'} element={<Page2/>}/>
         <Route path={'/item/:id'} element={<Item/>}/>
         <Route path={'*'} element={<App/>}/>
