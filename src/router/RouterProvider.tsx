@@ -12,13 +12,13 @@ export function RouterProvider({ children, base = '' }: { children: ReactNode, b
     const [activeChild, setActiveChild] = useState<ReactNode>(<></>)
     const params = useRef<Record<string, string>>({})
 
-    // convert all the Route child components into a {path, element} object
+    // convert all the <Route> child components of the context provider into a {path, pathMatchingRegex, paramsKeys, element} object
     // !!! add try catch
     const routing = useMemo(() => {
         return React.Children.map(children, (child) => {
             if (React.isValidElement<React.ComponentProps<typeof Route>>(child) && child.type === Route) {
 
-                // fallback
+                // fallback route
                 if(child.props.path == "*") return ({
                     path : '*',
                     pathMatchingRegex : new RegExp('(?s:.*)'),
@@ -26,8 +26,9 @@ export function RouterProvider({ children, base = '' }: { children: ReactNode, b
                     element: child.props.element 
                 })
 
-                const path = base + child.props.path.replace(/\/$/, "") // getting rid of trailing "/""
-                const paramsKeys = extractParams(path)
+                // getting rid of trailing "/""
+                const path = base + child.props.path.replace(/\/$/, "")
+                const paramsKeys = URLUtils.extractParams(path)
                 const pathMatchingRegex = paramsKeys.length == 0 ? 
                     new RegExp(`^${path}$`) : 
                         // replace /: with the same number of /[^/]+ so it can be compared to the active url
@@ -38,6 +39,7 @@ export function RouterProvider({ children, base = '' }: { children: ReactNode, b
                     paramsKeys,
                     element: child.props.element 
                 })
+
             }
             throw new Error(`All children of Router must be Route components.`)
         })
@@ -73,30 +75,34 @@ export function RouterProvider({ children, base = '' }: { children: ReactNode, b
         getHistorySnapshot
     )
 
-    useEffect(() => {
-        console.log('historyState effect')
-
-        function handleMatchingRoute(route : IRoute, historyState : string){
-            const nExpectedParams = route.paramsKeys.length
-            if(nExpectedParams > 0) {
-                const extractedParams = historyState.split('/').slice(-nExpectedParams)
-                if(extractedParams.length != nExpectedParams) throw new Error(`Expected ${nExpectedParams} params, but got ${extractedParams.length}`)
-                params.current = Object.fromEntries(route.paramsKeys.map((key, index) => [key, extractedParams[index]]))
-            }
-            if(!Object.is(activeChild, route.element)) setActiveChild(route.element)
+    const handleMatchingRoute = useCallback((route: IRoute, historyState: string) => {
+        const nExpectedParams = route.paramsKeys.length
+        if(nExpectedParams > 0) {
+            const extractedParams = historyState.split('/').slice(-nExpectedParams)
+            if(extractedParams.length != nExpectedParams) throw new Error(`Expected ${nExpectedParams} params, but got ${extractedParams.length}`)
+            params.current = Object.fromEntries(route.paramsKeys.map((key, index) => [key, extractedParams[index]]))
         }
+        if(!Object.is(activeChild, route.element)) setActiveChild(route.element)
+    }, [activeChild, setActiveChild]);
 
+    useEffect(() => {
         try{
-            // const historyPathname = new URL(historyState).pathname
-            const activeRoute = routing?.find(route => historyState.match(route.pathMatchingRegex))
+            // look for a route matching the navbar url
+            const activeRoute = routing?.find(route => {
+                // if no base defined, won't use the full url for comparison, only the post host segment of the navbar url
+                const historyRelevantSegment = base ? historyState : URLUtils.extractPostHostUrlSegment(historyState)
+                return historyRelevantSegment.match(route.pathMatchingRegex)
+            })
             if(activeRoute) return handleMatchingRoute(activeRoute, historyState)
 
+            // fallback route
             const defaultRoute = routing?.find(route => route.path == '*')
             if(defaultRoute) handleMatchingRoute(defaultRoute, historyState)
+
+            throw new Error("No route matching this url.")
         } catch(error){
             console.error(error)
         }
-        // !!! throw if no matching route or default 404?
     }, [historyState])
 
     // programmatical navigation
@@ -116,15 +122,23 @@ export function RouterProvider({ children, base = '' }: { children: ReactNode, b
     )
 }
 
-function extractParams(url : string) {
-    const regex = /\/:([\w-]+)/g;
-    const matches = url.match(regex);
-    
-    if (!matches) {
-      return [];
+
+class URLUtils{
+    static extractParams(url : string) {
+        const regex = /\/:([\w-]+)/g;
+        const matches = url.match(regex);
+        
+        if (!matches) {
+          return [];
+        }
+        
+        return matches.map(match => match.slice(2));
     }
-    
-    return matches.map(match => match.slice(2));
+
+    static extractPostHostUrlSegment(link : string){
+        const url = new URL(link)
+        return link.split(url.host)[1]
+    }
 }
 
 interface IRoute{
@@ -135,11 +149,21 @@ interface IRoute{
 }
 
 /*
-const url = new URL('https://example.com/path/to/page?param1=value1&param2=value2');
-
-console.log(url.protocol); // "https:"
-console.log(url.hostname); // "example.com"
-console.log(url.pathname); // "/path/to/page"
-console.log(url.search);   // "?param1=value1&param2=value2"
-// 
-// */
+    const router = createBrowserRouter([
+    {
+        path: "/",
+        element: <Root />,
+        children: [
+        {
+            path: "home",
+            element: <Home />,
+        },
+        {
+            path: "about",
+            element: <About />,
+        },
+        ],
+    },
+    ]);
+    <RouterProvider router={router} />
+*/
