@@ -13,6 +13,7 @@ import DelayedComponent from './components/DelayedComponent';
 import { ErrorBoundary } from 'react-error-boundary';
 import ComponentWithEasedTransition from './components/ComponentWithEasedTransition';
 import Link from './router/Link';
+import ActionForm from './components/ActionForm';
 
 declare global {
     interface Window {
@@ -102,6 +103,7 @@ function App() {
             <Link href={"/test2/"}>Page 2</Link>
             <Link href={"/item/2"}>Item 2</Link>
             <Link href={"/item/22"}>Item 22</Link>
+            <ActionForm/>
         </div>
     )
 }
